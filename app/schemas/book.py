@@ -14,16 +14,14 @@ class BookCreate(BookBase):
 class BookUpdate(BaseModel):
     title: Optional[str]
     checkout_date: Optional[date]
+    patron_id: Optional[int]
 
 
 class Book(BookBase):
     id: int
     title: str
     checkout_date: Optional[date]
+    patron_id: Optional[int]
 
     class Config:
         from_attributes = True
-
-
-class SimpleResponse(BaseModel):
-    detail: str

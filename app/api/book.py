@@ -3,7 +3,7 @@ from sqlalchemy import select
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
-from app.models.book import Book
+from app.models.book import Book, Patron
 from app.schemas.book import BookCreate, BookUpdate
 from app.api.validation import validate_id
 
@@ -30,6 +30,13 @@ def update_book(db: Session, book_id: int, book: BookUpdate):
 
     if not obj:
         raise HTTPException(status_code=404, detail="Book not found")
+
+    # validate patron_id
+    if book.patron_id:
+        if validate_id(db, Patron, book.patron_id):
+            obj.patron_id = book.patron_id
+        else:
+            raise HTTPException(status_code=404, detail="Patron not found")
 
     # check optional fields
     if book.title:

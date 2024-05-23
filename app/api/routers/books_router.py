@@ -2,14 +2,15 @@ from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.schemas.book import Book, BookCreate, BookUpdate, SimpleResponse
+from app.schemas.book import Book, BookCreate, BookUpdate
+from app.schemas.base import SimpleResponse
 from app.api import book
 from app.api.dependencies import get_db
 
-router = APIRouter(prefix="/books", tags=["books"])
+books_router = APIRouter(prefix="/books", tags=["books"])
 
 
-@router.get("/", response_model=List[Book])
+@books_router.get("/", response_model=List[Book])
 def read_books(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     Get all books
@@ -18,7 +19,7 @@ def read_books(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return books
 
 
-@router.post("/create", response_model=Book)
+@books_router.post("/create", response_model=Book)
 def add_book(bk: BookCreate, db: Session = Depends(get_db)):
     """
     Create book
@@ -27,7 +28,7 @@ def add_book(bk: BookCreate, db: Session = Depends(get_db)):
     return new_book
 
 
-@router.put(
+@books_router.put(
     "/{book_id}/update",
     response_model=Book | SimpleResponse,
     responses={404: {"model": SimpleResponse}},
@@ -40,7 +41,7 @@ def change_book(book_id: int, bk: BookUpdate, db: Session = Depends(get_db)):
     return updated_book
 
 
-@router.delete(
+@books_router.delete(
     "/{book_id}/delete",
     response_model=SimpleResponse,
     responses={404: {"model": SimpleResponse}},
