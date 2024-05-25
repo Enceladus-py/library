@@ -12,9 +12,9 @@ class BookCreate(BookBase):
 
 
 class BookUpdate(BaseModel):
-    title: Optional[str]
-    checkout_date: Optional[date]
-    patron_id: Optional[int]
+    title: Optional[str] = None
+    checkout_date: Optional[date] = None
+    patron_id: Optional[int] = None
 
 
 class Book(BookBase):

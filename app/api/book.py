@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from datetime import datetime, timedelta
 
 from app.models.book import Book, Patron
 from app.schemas.book import BookCreate, BookUpdate
@@ -31,18 +32,47 @@ def update_book(db: Session, book_id: int, book: BookUpdate):
     if not obj:
         raise HTTPException(status_code=404, detail="Book not found")
 
-    # validate patron_id
-    if book.patron_id:
-        if validate_id(db, Patron, book.patron_id):
+    dict_data = book.model_dump(exclude_unset=True)
+
+    if (
+        "patron_id" in dict_data
+        and "checkout_date" not in dict_data
+        and not obj.checkout_date
+    ) or (
+        "patron_id" not in dict_data
+        and "checkout_date" in dict_data
+        and not obj.patron_id
+    ):
+        raise HTTPException(
+            status_code=400, detail="Set both patron id and checkout date"
+        )
+
+    # validate patron_id and checkout date
+    if "patron_id" in dict_data:
+        patron_exists = validate_id(db, Patron, book.patron_id)
+        if patron_exists:
             obj.patron_id = book.patron_id
+            if book.checkout_date:
+                obj.checkout_date = book.checkout_date
+        elif patron_exists and not book.checkout_date and not obj.checkout_date:
+            raise HTTPException(status_code=400, detail="Checkout date is invalid")
         else:
             raise HTTPException(status_code=404, detail="Patron not found")
 
-    # check optional fields
-    if book.title:
+    # validate checkout date
+    elif "checkout_date" in dict_data:
+        if book.checkout_date:
+            obj.checkout_date = book.checkout_date
+        elif book.checkout_date is None and obj.patron_id is None:
+            obj.checkout_date = None
+        else:
+            raise HTTPException(status_code=400, detail="Checkout date is invalid")
+
+    # check optional title field
+    if "title" in dict_data:
+        if book.title is None:
+            raise HTTPException(status_code=400, detail="Title is invalid")
         obj.title = book.title
-    if book.checkout_date:
-        obj.checkout_date = book.checkout_date
 
     # update book object
     db.commit()
@@ -57,3 +87,19 @@ def delete_book(db: Session, book_id: int):
         return JSONResponse(status_code=200, content="Book deleted")
     else:
         raise HTTPException(status_code=404, detail="Book not found")
+
+
+def get_checked_out_books(db: Session):
+    # get checked out books
+    return db.scalars(select(Book).where(Book.checkout_date != None))  # noqa: E711
+
+
+def get_overdue_books(db: Session):
+    # get overdue books
+    two_weeks_ago = datetime.now() - timedelta(weeks=2)  # 2 weeks passed
+    return db.scalars(
+        select(Book).where(
+            Book.checkout_date != None,  # noqa: E711
+            Book.checkout_date < two_weeks_ago,
+        )
+    ).all()

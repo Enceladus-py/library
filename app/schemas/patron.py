@@ -9,12 +9,12 @@ class PatronBase(BaseModel):
 
 
 class PatronCreate(PatronBase):
-    books: Optional[List[int]]
+    books: Optional[List[int]] = []
 
 
 class PatronUpdate(BaseModel):
-    name: Optional[str]
-    books: Optional[List[int]]
+    name: Optional[str] = None
+    books: Optional[List[int]] = []
 
 
 class Patron(PatronBase):

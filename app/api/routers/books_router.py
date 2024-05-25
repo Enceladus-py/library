@@ -31,7 +31,10 @@ def add_book(bk: BookCreate, db: Session = Depends(get_db)):
 @books_router.put(
     "/{book_id}/update",
     response_model=Book | SimpleResponse,
-    responses={404: {"model": SimpleResponse}},
+    responses={
+        404: {"model": SimpleResponse},
+        400: {"model": SimpleResponse},
+    },
 )
 def change_book(book_id: int, bk: BookUpdate, db: Session = Depends(get_db)):
     """
@@ -52,3 +55,21 @@ def remove_book(book_id: int, db: Session = Depends(get_db)):
     """
     res = book.delete_book(db=db, book_id=book_id)
     return res
+
+
+@books_router.get("/checked-out", response_model=List[Book])
+def read_checked_out_books(db: Session = Depends(get_db)):
+    """
+    Get checked out books
+    """
+    books = book.get_checked_out_books(db)
+    return books
+
+
+@books_router.get("/overdue", response_model=List[Book])
+def read_overdue_books(db: Session = Depends(get_db)):
+    """
+    Get overdue books
+    """
+    books = book.get_overdue_books(db)
+    return books

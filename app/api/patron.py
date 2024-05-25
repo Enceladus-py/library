@@ -35,15 +35,21 @@ def update_patron(db: Session, patron_id: int, pt: PatronUpdate):
     if not obj:
         raise HTTPException(status_code=404, detail="Patron not found")
 
+    dict_data = pt.model_dump(exclude_unset=True)
+
     # validate books
-    if pt.books:
-        if books := validate_books(db, pt.books):
-            obj.books = books
+    if "books" in dict_data:
+        if pt.books is None or len(pt.books) == 0:
+            obj.books = []
+        elif books := validate_books(db, pt.books):  # only assign checked out books
+            obj.books = [book for book in books if book.checkout_date]
         else:
             raise HTTPException(status_code=400, detail="Invalid books field")
 
     # check optional fields
-    if pt.name:
+    if "name" in dict_data:
+        if pt.name is None:
+            raise HTTPException(status_code=400, detail="Invalid name field")
         obj.name = pt.name
 
     # update patron object
