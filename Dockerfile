@@ -14,5 +14,7 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir --upgrade -r /app/req
 
 COPY ./app /app
 
+EXPOSE 8000
+
 # Run the application
-CMD . /opt/venv/bin/activate && fastapi run app/main.py --port 80
+CMD . /opt/venv/bin/activate && fastapi dev app/main.py --host 0.0.0.0 --port 8000
