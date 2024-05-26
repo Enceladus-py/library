@@ -1,11 +1,12 @@
 from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Annotated
 
 from app.schemas.book import Book, BookCreate, BookUpdate
 from app.schemas.base import SimpleResponse
+from app.schemas.patron import PatronWithID
 from app.api import book
-from app.api.dependencies import get_db
+from app.api.dependencies import get_db, get_current_patron
 
 books_router = APIRouter(prefix="/books", tags=["books"])
 
@@ -73,3 +74,24 @@ def read_overdue_books(db: Session = Depends(get_db)):
     """
     books = book.get_overdue_books(db)
     return books
+
+
+@books_router.get(
+    "/{book_id}/checkout",
+    response_model=Book | SimpleResponse,
+    responses={
+        404: {"model": SimpleResponse},
+        401: {"model": SimpleResponse},
+        400: {"model": SimpleResponse},
+    },
+)
+def checkout_book_with_current_user(
+    book_id: int,
+    current_patron: Annotated[PatronWithID, Depends(get_current_patron)],
+    db: Session = Depends(get_db),
+):
+    """
+    Checkout the book with current user
+    """
+    checked_out_book = book.checkout_book(db, book_id, current_patron)
+    return checked_out_book

@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
 from app.models.patron import Patron
+from app.models.user import User
 from app.schemas.patron import PatronCreate, PatronUpdate
 from app.api.validation import validate_id, validate_books
 
@@ -16,11 +17,20 @@ def get_patrons(db: Session, skip: int = 0, limit: int = 100):
 def create_patron(db: Session, patron: PatronCreate):
     # create patron object
     db_patron = Patron(name=patron.name)
+
+    # validate user id
+    if not validate_id(db, User, patron.user_id):
+        raise HTTPException(status_code=400, detail="Invalid user id")
+
+    db_patron.user_id = patron.user_id
+
+    # validate books
     if patron.books:
         if books := validate_books(db, patron.books):
             db_patron.books = books
         else:
             raise HTTPException(status_code=400, detail="Invalid books field")
+
     # save it in db
     db.add(db_patron)
     db.commit()

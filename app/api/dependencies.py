@@ -43,3 +43,15 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+# Get the current patron
+def get_current_patron(
+    current_user=Depends(get_current_user),
+):
+    if not current_user.patron:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="This user is not connected with any patron",
+        )
+    return current_user.patron

@@ -2,10 +2,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from app.models.book import Book, Patron
 from app.schemas.book import BookCreate, BookUpdate
+from app.schemas.patron import PatronWithID
 from app.api.validation import validate_id
 
 
@@ -103,3 +104,17 @@ def get_overdue_books(db: Session):
             Book.checkout_date < two_weeks_ago,
         )
     ).all()
+
+
+def checkout_book(db: Session, book_id: int, current_patron: PatronWithID):
+    if book := validate_id(db, Book, book_id):
+        if book.checkout_date is None:
+            book.checkout_date = date.today()
+            book.patron_id = current_patron.id
+            db.commit()
+            db.refresh(book)
+            return book
+        else:
+            raise HTTPException(status_code=400, detail="Book is already checked out")
+    else:
+        raise HTTPException(status_code=404, detail="Book not found")
