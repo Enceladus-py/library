@@ -108,7 +108,7 @@ def get_overdue_books(db: Session):
 
 def checkout_book(db: Session, book_id: int, current_patron: PatronWithID):
     if book := validate_id(db, Book, book_id):
-        if book.checkout_date is None:
+        if book.checkout_date is None:  # check if it is not checked out
             book.checkout_date = date.today()
             book.patron_id = current_patron.id
             db.commit()
@@ -116,5 +116,22 @@ def checkout_book(db: Session, book_id: int, current_patron: PatronWithID):
             return book
         else:
             raise HTTPException(status_code=400, detail="Book is already checked out")
+    else:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+
+def return_book(db: Session, book_id: int, current_patron: PatronWithID):
+    if book := validate_id(db, Book, book_id):
+        if book.checkout_date is None:
+            raise HTTPException(status_code=400, detail="This book is not checked out")
+        if book.patron_id != current_patron.id:
+            raise HTTPException(
+                status_code=400, detail="Book is owned by another patron"
+            )
+        book.checkout_date = None  # set to null required fields
+        book.patron_id = None
+        db.commit()
+        db.refresh(book)
+        return book
     else:
         raise HTTPException(status_code=404, detail="Book not found")

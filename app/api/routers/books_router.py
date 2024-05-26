@@ -95,3 +95,24 @@ def checkout_book_with_current_user(
     """
     checked_out_book = book.checkout_book(db, book_id, current_patron)
     return checked_out_book
+
+
+@books_router.get(
+    "/{book_id}/return",
+    response_model=Book | SimpleResponse,
+    responses={
+        404: {"model": SimpleResponse},
+        401: {"model": SimpleResponse},
+        400: {"model": SimpleResponse},
+    },
+)
+def return_book_with_current_user(
+    book_id: int,
+    current_patron: Annotated[PatronWithID, Depends(get_current_patron)],
+    db: Session = Depends(get_db),
+):
+    """
+    Return the book with current user
+    """
+    returned_book = book.return_book(db, book_id, current_patron)
+    return returned_book
