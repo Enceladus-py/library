@@ -17,7 +17,7 @@ def validate_books(db: Session, books: List[int]):
     return db.scalars(stmt).all()  # return existing books
 
 
-def validate_username(db: Session, username: str):
-    stmt = select(User).filter_by(username=username)
+def validate_unique_field(db: Session, field: dict):
+    stmt = select(User).filter_by(**field)
     result = db.execute(stmt).first()
     return result is not None

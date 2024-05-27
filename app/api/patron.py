@@ -51,8 +51,11 @@ def update_patron(db: Session, patron_id: int, pt: PatronUpdate):
     if "books" in dict_data:
         if pt.books is None or len(pt.books) == 0:
             obj.books = []
-        elif books := validate_books(db, pt.books):  # only assign checked out books
-            obj.books = [book for book in books if book.checkout_date]
+        # only assign checked out books
+        elif books := [
+            book for book in validate_books(db, pt.books) if book.checkout_date
+        ]:
+            obj.books = books
         else:
             raise HTTPException(status_code=400, detail="Invalid books field")
 

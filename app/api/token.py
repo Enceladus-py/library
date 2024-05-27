@@ -10,20 +10,27 @@ from app.models.user import User
 from app.utils import authenticate_user, create_access_token, get_password_hash
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.api.dependencies import get_db
-from app.api.validation import validate_username
+from app.api.validation import validate_unique_field
 
 
 def register_user(user: UserRegister, db: Session = Depends(get_db)):
-    username = validate_username(db, user.username)
+    username = validate_unique_field(db, {"username": user.username})
     if username:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already exists",
         )
+    email = validate_unique_field(db, {"email": user.email})
+    if email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already exists",
+        )
     # create user and save it in db
     db_user = User(
         username=user.username,
         hashed_password=get_password_hash(user.password),
+        email=user.email,
     )
     db.add(db_user)
     db.commit()
