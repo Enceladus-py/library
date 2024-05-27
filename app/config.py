@@ -26,4 +26,9 @@ beat_schedule = {
         "task": "app.tasks.send_daily_reminder_overdue_books",
         "schedule": crontab(hour=13, minute=30),
     },
+    # at every monday 12.00
+    "checkout-weekly-report": {
+        "task": "app.tasks.weekly_report_for_checkout_statistics",
+        "schedule": crontab(hour=16, minute=39, day_of_week="mon"),
+    },
 }

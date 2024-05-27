@@ -1,0 +1,40 @@
+[
+    {
+        "book": {
+            "id": 2,
+            "title": "test book 2",
+            "checkout_date": "2024-05-27",
+            "patron_id": 1
+        },
+        "user": {
+            "id": 1,
+            "username": "berat",
+            "hashed_password": "$2b$12$lpzq8zfuvdFqtmWRtHsOOu2rNRj9ejRiD6IrAaEb9UCt8ztPHnCT6",
+            "email": "berat@gmail.com"
+        },
+        "patron": {
+            "id": 1,
+            "name": "berat dalsuna",
+            "user_id": 1
+        }
+    },
+    {
+        "book": {
+            "id": 1,
+            "title": "test book",
+            "checkout_date": "2024-05-21",
+            "patron_id": 1
+        },
+        "user": {
+            "id": 1,
+            "username": "berat",
+            "hashed_password": "$2b$12$lpzq8zfuvdFqtmWRtHsOOu2rNRj9ejRiD6IrAaEb9UCt8ztPHnCT6",
+            "email": "berat@gmail.com"
+        },
+        "patron": {
+            "id": 1,
+            "name": "berat dalsuna",
+            "user_id": 1
+        }
+    }
+]

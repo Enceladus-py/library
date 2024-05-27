@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, inspect
 from datetime import date
+import json
 
 from .celery import app
 from app.models.book import Book
@@ -36,5 +37,42 @@ def send_daily_reminder_overdue_books():
         db.bulk_insert_mappings(Email, emails_to_create)  # bulk create
         db.commit()
         return emails_to_create
+    finally:
+        db.close()
+
+
+@app.task
+def weekly_report_for_checkout_statistics():
+    def to_dict(instance):
+        # convert SQLAlchemy model instance to dictionary
+        res = {}
+        for c in inspect(instance).mapper.column_attrs:
+            attr = getattr(instance, c.key)
+            res[c.key] = attr if type(attr) != date else attr.isoformat()
+        return res
+
+    db: Session = SessionLocal()
+    try:
+        # 1 week passed
+        one_week_ago = datetime.now() - timedelta(weeks=1)
+        checked_out_report = [
+            {
+                "book": to_dict(book),
+                "user": to_dict(user),
+                "patron": to_dict(patron),
+            }
+            for user, patron, book in db.execute(
+                select(User, Patron, Book)
+                .join(Book.patron)
+                .join(Patron.user)
+                .where(
+                    Book.checkout_date != None,  # noqa: E711
+                    Book.checkout_date >= one_week_ago,
+                )
+            )
+        ]
+        with open(f"app/reports/report-{date.today()}.txt", "x") as file:
+            file.write(json.dumps(checked_out_report, indent=4))  # write to txt
+        return checked_out_report
     finally:
         db.close()
