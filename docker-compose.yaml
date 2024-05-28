@@ -3,10 +3,11 @@ version: "3"
 services:
   web:
     build: .
+    command: fastapi dev main.py --host 0.0.0.0 --port 8000
     environment:
       PYTHONUNBUFFERED: 1 # to see print outputs in shell
     volumes:
-      - .:/app
+      - ./app:/app
     ports:
       - "8000:8000"
     depends_on:
@@ -24,9 +25,9 @@ services:
       - pgdata:/var/lib/postgresql/data
   worker:
     build: .
-    command: sh -c ". /opt/venv/bin/activate && celery -A app worker -l INFO -B"
+    command: celery -A celery_worker worker -l INFO -B
     volumes:
-      - .:/app
+      - ./app:/app
     depends_on:
       - web
       - redis

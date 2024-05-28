@@ -4,7 +4,7 @@ from sqlalchemy import select, inspect
 from datetime import date
 import json
 
-from .celery import app
+from app.celery_worker.celery import app
 from app.models.book import Book
 from app.models.email import Email
 from app.models.user import User
@@ -41,16 +41,17 @@ def send_daily_reminder_overdue_books():
         db.close()
 
 
+def to_dict(instance):
+    # convert SQLAlchemy model instance to dictionary
+    res = {}
+    for c in inspect(instance).mapper.column_attrs:
+        attr = getattr(instance, c.key)
+        res[c.key] = attr if type(attr) != date else attr.isoformat()
+    return res
+
+
 @app.task
 def weekly_report_for_checkout_statistics():
-    def to_dict(instance):
-        # convert SQLAlchemy model instance to dictionary
-        res = {}
-        for c in inspect(instance).mapper.column_attrs:
-            attr = getattr(instance, c.key)
-            res[c.key] = attr if type(attr) != date else attr.isoformat()
-        return res
-
     db: Session = SessionLocal()
     try:
         # 1 week passed
@@ -71,7 +72,7 @@ def weekly_report_for_checkout_statistics():
                 )
             )
         ]
-        with open(f"app/reports/report-{date.today()}.txt", "x") as file:
+        with open(f"reports/report-{date.today()}.txt", "x") as file:
             file.write(json.dumps(checked_out_report, indent=4))  # write to txt
         return checked_out_report
     finally:
