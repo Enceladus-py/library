@@ -22,6 +22,16 @@ You can access the swagger UI from [localhost:8000/docs]()
 ## Authentication
 To authenticate, the user should register first with a username, email and a password. After that, a patron can be created with that related user to return or checkout from the API. JWT tokens are used to get current user info.
 
+## Admin page
+A simple admin panel is added for all models with the package `sqladmin`. You can apply CRUD operations on all data if you are a root user. There is a user created at the beginning of the application with following information:
+```
+username: root
+password: 123
+```
+
+Admin page can be accessed from [localhost:8000/admin]()
+
+You should log first to get access to admin panel. Login url: [localhost:8000/admin/login]()
 ## Celery configuration
 
 To schedule the tasks `celery` and `celery-beat` is used. There are 2 tasks. One is for daily reminder and other one is for generating weekly reports. You can access the schedule parameters from `config.py`.

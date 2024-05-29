@@ -8,3 +8,5 @@ python-multipart==0.0.9
 pyjwt==2.8.0
 passlib[bcrypt]==1.7.4
 celery[redis]==5.4.0
+sqladmin==0.17.0
+itsdangerous==2.2.0
